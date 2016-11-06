@@ -2,9 +2,56 @@ import React from 'react';
 import StatusUpdate from './statusupdate';
 import CommentThread from './commentthread';
 import Comment from './comment';
+import {postComment} from '../server.js';
+import {likeFeedItem} from '../server.js';
+import {unlikeFeedItem} from '../server.js';
+
+
 
 export default class FeedItem extends React.Component{
+  constructor(props) {
+    super(props);
+    this.state = props.data;
+  }
+
+  handleCommentPost(commentText){
+    postComment(this.state._id, 4, commentText, (updatedFeedItem) => {
+      this.setState(updatedFeedItem);
+    });
+  }
+
+  handleLikeClick(clickEvent){
+    clickEvent.preventDefault();
+    if(clickEvent.button === 0){
+      var callbackFunction = (updatedLikeCounter) =>{
+        this.setState({likeCounter: updatedLikeCounter});
+      };
+
+      if(this.didUserLike()) {
+        unlikeFeedItem(this.state._id, 4, callbackFunction);
+      } else {
+        likeFeedItem(this.state._id, 4, callbackFunction);
+      }
+    }
+  }
+
+  didUserLike() {
+    var likeCounter = this.state.likeCounter;
+    var liked = false;
+    for(var i = 0; i < likeCounter.length; i++){
+      if(likeCounter[i]._id === 4){
+        liked = true;
+        break;
+      }
+    }
+    return liked;
+  }
+
   render(){
+    var likeButtonText = "Like";
+    if(this.didUserLike()){
+      likeButtonText = "Unlike";
+    }
     var data = this.props.data;
     var contents;
     switch(data.type) {
@@ -14,7 +61,11 @@ export default class FeedItem extends React.Component{
                         author={data.contents.author}
                         postDate={data.contents.postDate}
                         location={data.contents.location}>
-            {data.contents.contents}
+            {data.contents.contents.split("\n").map((line, i) =>{
+              return (
+                <p key={"line" + i}>{line}</p>
+              );
+            })}
           </StatusUpdate>
         );
         break;
@@ -31,9 +82,9 @@ export default class FeedItem extends React.Component{
             <div className="col-md-12">
               <ul className="list-inline">
                 <li>
-                <a href="#">
+                <a href="#" onClick={(e) => this.handleLikeClick(e)}>
                   <span className="glyphicon glyphicon-thumbs-up">
-                  </span> Like</a>
+                  </span> {likeButtonText}</a>
                 </li>
                 <li>
                 <a href="#">
@@ -56,7 +107,7 @@ export default class FeedItem extends React.Component{
             </div>
           </div>
           <hr />
-          <CommentThread>
+          <CommentThread onPost={(commentText) => this.handleCommentPost(commentText)}>
             {
               data.comments.map((comment, i) => {
                 return (

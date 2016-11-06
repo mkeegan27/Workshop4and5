@@ -1,5 +1,24 @@
 import React from 'react';
 export default class StatusUpdateEntry extends React.Component {
+  constructor(props){
+    super(props);
+    this.state = {
+      value: ""
+    };
+  }
+  handlePost(e){
+    e.preventDefault();
+    var statusUpdateText = this.state.value.trim();
+    if(statusUpdateText !== ""){
+      this.props.onPost(statusUpdateText);
+      this.setState({value: ""});
+    }
+  }
+  handleChange(e){
+    e.preventDefault();
+    this.setState({value: e.target.value});
+  }
+
   render() {
     return (
       <div className="fb-status-update-entry panel panel-default">
@@ -24,9 +43,11 @@ export default class StatusUpdateEntry extends React.Component {
             </div>
             <div className="media-body">
               <div className="form-group">
-                <textarea className="form-control" rows="2"
-                  placeholder="What's on your mind?">
-                </textarea>
+                <textarea className="form-control"
+                          rows="2"
+                          placeholder="What's on your mind?"
+                          value={this.state.value}
+                          onChange={(e) => this.handleChange(e)} />
               </div>
             </div>
           </div>
@@ -40,7 +61,7 @@ export default class StatusUpdateEntry extends React.Component {
                   <span className="glyphicon glyphicon-user"></span>
                 </button>
                 <button type="button" className="btn btn-default">
-                  ☺
+                  <span className="glyphicon glyphicon-heart"></span>
                 </button>
                 <button type="button" className="btn btn-default">
                   <span className="glyphicon glyphicon-pushpin"></span>
@@ -53,7 +74,9 @@ export default class StatusUpdateEntry extends React.Component {
                   <span className="glyphicon glyphicon-user"></span>
                     Friends <span className="caret"></span>
                 </button>
-                <button type="button" className="btn btn-default">
+                <button type="button"
+                        className="btn btn-default"
+                        onClick={(e) => this.handlePost(e)}>
                   Post
                 </button>
               </div>

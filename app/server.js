@@ -10,6 +10,64 @@ function emulateServerReturn(data, cb) {
   }, 4);
 }
 
+export function likeFeedItem(feedItemId, userId, cb){
+  var feedItem = readDocument('feedItems', feedItemId);
+  feedItem.likeCounter.push(userId);
+  writeDocument('feedItems', feedItem);
+  emulateServerReturn(feedItem.likeCounter.map((userId) =>
+                        readDocument('users', userId)), cb);
+}
+
+export function unlikeFeedItem(feedItemId, userId, cb){
+  var feedItem = readDocument('feedItems', feedItemId);
+
+  var userIndex = feedItem.likeCounter.indexOf(userId);
+
+  if(userIndex !== -1){
+    feedItem.likeCounter.splice(userIndex, 1);
+    writeDocument('feedItems', feedItem);
+  }
+  emulateServerReturn(feedItem.likeCounter.map((userId) => readDocument('users', userId)), cb);
+}
+
+export function postComment(feedItemId, author, contents, cb) {
+  var feedItem = readDocument('feedItems', feedItemId);
+  feedItem.comments.push({
+    "author": author,
+    "contents": contents,
+    "postDate": new Date().getTime()
+  });
+  writeDocument('feedItems', feedItem);
+  emulateServerReturn(getFeedItemSync(feedItemId), cb);
+}
+
+/**
+* Adds a new status update to the database.
+*/
+export function postStatusUpdate(user, location, contents, cb){
+  var time = new Date().getTime();
+  var newStatusUpdate = {
+    "likeCounter": [],
+    "type": "statusUpdate",
+    "contents": {
+      "author": user,
+      "postDate": time,
+      "location": location,
+      "contents": contents
+    },
+    "comments": []
+  };
+  newStatusUpdate = addDocument('feedItems', newStatusUpdate);
+
+  var userData = readDocument('users', user);
+  var feedData = readDocument('feeds', userData.feed);
+  feedData.contents.unshift(newStatusUpdate._id);
+
+  writeDocument('feeds', feedData);
+
+  emulateServerReturn(newStatusUpdate, cb);
+}
+
 /**
 * Given a feed item ID, returns a FeedItem object with references resolved.
 * Internal to the server, since it's synchronous.
