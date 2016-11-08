@@ -48,9 +48,12 @@ export default class FeedItem extends React.Component{
   }
 
   render(){
-    var likeButtonText = "Like";
+    var likeButtonText = "";
     if(this.didUserLike()){
       likeButtonText = "Unlike";
+    }
+    else{
+      likeButtonText = "Like";
     }
     var data = this.props.data;
     var contents;
@@ -103,7 +106,7 @@ export default class FeedItem extends React.Component{
         <div className="panel-footer">
           <div className="row">
             <div className="col-md-12">
-              <a href="#">{data.likeCounter.length} people</a> like this
+              <a href="#">{this.state.likeCounter.length} people</a> like this
             </div>
           </div>
           <hr />
@@ -113,7 +116,11 @@ export default class FeedItem extends React.Component{
                 return (
                   <Comment key={i}
                            author={comment.author}
-                           postDate={comment.postDate}>
+                           postDate={comment.postDate}
+                           idNum={i}
+                           parentThread={this.state._id}
+                           likeCounter={comment.likeCounter}
+                           data={comment}>
                       {comment.contents}
                   </Comment>
                 );
